@@ -1,10 +1,48 @@
-use std::{env, path::Path};
+use std::{env, path::Path, sync::LazyLock};
 
 enum Detection {
     Rust,
     Node,
     Both,
     Unsupported,
+}
+
+struct Task {
+    name: String,
+    program: String,
+    args: Vec<String>,
+}
+
+static CARGO_CMDS: LazyLock<Vec<Task>> = LazyLock::new(|| {
+    vec![
+        Task {
+            name: "Build".to_string(),
+            program: "cargo".to_string(),
+            args: vec!["build".to_string()],
+        },
+        Task {
+            name: "Run".to_string(),
+            program: "cargo".to_string(),
+            args: vec!["run".to_string()],
+        },
+        Task {
+            name: "Test".to_string(),
+            program: "cargo".to_string(),
+            args: vec!["test".to_string()],
+        },
+        Task {
+            name: "Check".to_string(),
+            program: "cargo".to_string(),
+            args: vec!["check".to_string()],
+        },
+    ]
+});
+
+fn print_tasks(tasks: &[Task]) {
+    println!("Commands: ");
+    for task in tasks {
+        println!(" {}: {} {}", task.name, task.program, task.args.join(" "));
+    }
 }
 
 fn manifest_is_file(path: &Path) -> std::io::Result<bool> {
@@ -36,7 +74,10 @@ fn main() -> std::io::Result<()> {
     println!("Current Directory: {}", directory.display());
 
     match detection {
-        Detection::Rust => println!("Rust project detected"),
+        Detection::Rust => {
+            println!("Rust project detected");
+            print_tasks(CARGO_CMDS.as_slice());
+        }
         Detection::Node => println!("Node project detected"),
         Detection::Both => println!("Both detected"),
         Detection::Unsupported => println!("Unsupported directory"),
