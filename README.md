@@ -77,8 +77,8 @@ LazyFlow/
 
 - [x] **Phase 1 — Foundations:** Set up the Rust project; detect Rust and Node.js projects.
 - [x] **Phase 2 — Task discovery:** Create task definitions and parse `package.json` scripts.
-- [ ] **Phase 3 — Command execution:** Run selected tasks and handle errors safely.
-- [ ] **Phase 4 — Terminal UI:** Add a keyboard-driven interface with Ratatui.
+- [ ] **Phase 3 — Terminal UI:** Add a keyboard-driven interface with Ratatui.
+- [ ] **Phase 4 — Command execution:** Run selected tasks and handle errors safely.
 - [ ] **Phase 5 — Testing and release:** Add tests, run formatting and lint checks, and prepare documentation.
 
 ### Future Improvements
