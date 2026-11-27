@@ -65,6 +65,48 @@ fn detect_project(directory: &Path) -> std::io::Result<Detection> {
     })
 }
 
+fn node_tasks(directory: &Path) -> std::io::Result<Vec<Task>> {
+    let package_path = directory.join("package.json");
+    let package_contents = std::fs::read_to_string(&package_path)?;
+
+    let package: serde_json::Map<String, serde_json::Value> =
+        serde_json::from_str(&package_contents).map_err(|error| {
+            std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                format!("Invalid {}: {error}", package_path.display()),
+            )
+        })?;
+
+    let scripts = match package.get("scripts") {
+        None => return Ok(Vec::new()),
+        Some(value) => value.as_object().ok_or_else(|| {
+            std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "package.json: 'scripts' must be an object",
+            )
+        })?,
+    };
+
+    let mut tasks = Vec::new();
+
+    for (name, command) in scripts {
+        if !command.is_string() {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                format!("package.json: script `{name} must contain a string"),
+            ));
+        }
+
+        tasks.push(Task {
+            name: name.clone(),
+            program: "npm".to_string(),
+            args: vec!["run".to_string(), "--".to_string(), name.clone()],
+        });
+    }
+
+    Ok(tasks)
+}
+
 fn main() -> std::io::Result<()> {
     println!("LazyFlow: Project Detection");
 
@@ -78,7 +120,15 @@ fn main() -> std::io::Result<()> {
             println!("Rust project detected");
             print_tasks(CARGO_CMDS.as_slice());
         }
-        Detection::Node => println!("Node project detected"),
+        Detection::Node => {
+            println!("Node.js project detected");
+            let task = node_tasks(&directory)?;
+            if task.is_empty() {
+                print!("No npm scripts are defined.");
+            } else {
+                print_tasks(&task);
+            }
+        }
         Detection::Both => println!("Both detected"),
         Detection::Unsupported => println!("Unsupported directory"),
     }
